@@ -1291,8 +1291,12 @@ CRITICAL rule for "target_keywords_pages": every entry must be an exact string c
         })
       });
       const data = await resp.json();
+      if(!resp.ok || data.error){
+        const msg = data.error?.message || data.error || `Request failed (${resp.status}).`;
+        throw new Error(`API error: ${msg}`);
+      }
       const textBlock = (data.content||[]).find(b=>b.type==='text');
-      if(!textBlock) throw new Error('No response text from model.');
+      if(!textBlock){ console.error('Unexpected API response:', data); throw new Error('The API responded but sent no text content — check the browser console (F12) for the raw response.'); }
       let clean = textBlock.text.trim().replace(/^```json/,'').replace(/^```/,'').replace(/```$/,'').trim();
       const parsed = safeParseJSON(clean);
 
