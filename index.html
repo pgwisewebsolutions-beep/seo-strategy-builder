@@ -1,0 +1,1784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEO Strategy Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root{
+    --paper:#EDEEE8;
+    --card:#FFFFFF;
+    --ink:#17241F;
+    --ink-soft:#4B564F;
+    --organic:#1F6F52;
+    --organic-soft:#E4F1EA;
+    --traffic:#2F5D8A;
+    --traffic-soft:#E6EDF4;
+    --signal:#C97A2E;
+    --signal-soft:#FBEEE0;
+    --danger:#A84438;
+    --line:#DAD8CC;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:32px 20px 80px;}
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif;margin:0;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--organic);
+    margin-bottom:8px;
+  }
+  header.app-header{margin-bottom:36px;}
+  header.app-header h1{font-size:clamp(26px,4vw,34px);line-height:1.15;}
+  header.app-header p{color:var(--ink-soft);margin-top:10px;font-size:15px;max-width:56ch;line-height:1.5;}
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:22px 24px;
+    margin-bottom:20px;
+  }
+  .card h2{font-size:16px;display:flex;align-items:center;gap:8px;}
+  .card h2 .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+  .card > p.hint{color:var(--ink-soft);font-size:13px;margin:6px 0 16px;}
+
+  .source-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  @media(max-width:720px){.source-grid{grid-template-columns:1fr;}}
+
+  .tabbar{display:flex;gap:6px;margin-bottom:14px;}
+  .tabbtn{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    padding:6px 12px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .tabbtn.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+
+  label{display:block;font-size:12.5px;color:var(--ink-soft);margin:10px 0 4px;}
+  label:first-child{margin-top:0;}
+  input[type=text],input[type=number],input[type=month],select,textarea{
+    width:100%;
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:8px 10px;
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    background:#FBFBF9;
+    color:var(--ink);
+  }
+  input[type=file]{font-size:12.5px;}
+  textarea{resize:vertical;min-height:64px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+  .filepanel{
+    border:1.5px dashed var(--line);
+    border-radius:8px;
+    padding:16px;
+    text-align:center;
+    font-size:12.5px;
+    color:var(--ink-soft);
+  }
+  .filepanel.ready{border-color:var(--organic);background:var(--organic-soft);color:var(--ink);}
+  .filepanel.err{border-color:var(--danger);background:#F5EBE9;color:var(--danger);}
+
+  .connect-btn{
+    font-family:'IBM Plex Mono',monospace;font-size:12.5px;
+    padding:9px 16px;border-radius:6px;border:1px solid var(--traffic);
+    background:var(--traffic-soft);color:var(--traffic);cursor:pointer;font-weight:500;
+  }
+  .connect-btn:hover{background:var(--traffic);color:#fff;}
+  .connect-btn:disabled{opacity:.5;cursor:not-allowed;}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{
+    border:1px solid var(--line);
+    background:#FBFBF9;
+    border-radius:999px;
+    padding:7px 13px;
+    font-size:13px;
+    cursor:pointer;
+    color:var(--ink-soft);
+    user-select:none;
+  }
+  .chip.active{background:var(--signal-soft);border-color:var(--signal);color:var(--ink);font-weight:500;}
+
+  .tf-toggle{display:flex;gap:8px;margin-top:6px;}
+  .tf-toggle button{
+    flex:1;padding:10px;border-radius:8px;border:1px solid var(--line);
+    background:#FBFBF9;cursor:pointer;font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink-soft);
+  }
+  .tf-toggle button.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+
+  .generate-bar{position:sticky;bottom:16px;display:flex;justify-content:center;margin-top:26px;}
+  .gen-btn{
+    font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:15px;
+    background:var(--ink);color:#fff;border:none;border-radius:999px;
+    padding:14px 30px;cursor:pointer;box-shadow:0 6px 20px rgba(23,36,31,.25);
+    display:flex;align-items:center;gap:10px;
+  }
+  .gen-btn:disabled{background:#9DA39C;cursor:not-allowed;box-shadow:none;}
+  .gen-btn .spinner{width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;animation:spin .7s linear infinite;display:none;}
+  .gen-btn.loading .spinner{display:inline-block;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .status-msg{text-align:center;font-size:12.5px;color:var(--ink-soft);margin-top:10px;font-family:'IBM Plex Mono',monospace;}
+  .status-msg.err{color:var(--danger);}
+
+  #output{display:none;margin-top:40px;}
+  .out-summary{font-size:15px;line-height:1.6;color:var(--ink-soft);margin-bottom:28px;}
+  .out-summary strong{color:var(--ink);}
+
+  .report-title{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:600;margin-bottom:18px;}
+  .report-title a{color:var(--traffic);}
+
+  .kpi-card{
+    background:var(--card);border:1.5px solid var(--organic);border-radius:var(--radius);
+    padding:20px 22px;margin-bottom:24px;
+  }
+  .kpi-card h2{font-size:18px;margin-bottom:14px;}
+  .kpi-list{list-style:disc;margin:0;padding-left:20px;}
+  .kpi-list > li{padding:6px 0;}
+  .kpi-line{font-size:14px;color:var(--ink);}
+  .kpi-line b{font-weight:700;}
+  .kpi-notes{list-style:circle;margin:4px 0 0;padding-left:20px;}
+  .kpi-notes li{font-size:12.5px;color:var(--ink-soft);line-height:1.5;padding:2px 0;}
+
+  .narrative-block{margin-bottom:28px;}
+  .narrative-block h3{font-size:14px;text-transform:uppercase;letter-spacing:.05em;font-family:'IBM Plex Mono',monospace;color:var(--ink-soft);margin:16px 0 6px;}
+  .narrative-block h3:first-child{margin-top:0;}
+  .narrative-block p{font-size:14.5px;line-height:1.6;color:var(--ink-soft);margin:0;}
+
+  .quarter-heading{
+    font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;
+    text-transform:uppercase;letter-spacing:.08em;color:var(--organic);
+    margin:30px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--line);
+  }
+  .m-summary{font-size:13px;color:var(--ink-soft);font-style:italic;margin:4px 0 10px;}
+
+  .sparkline{width:100%;height:70px;margin-bottom:8px;}
+
+  .timeline{position:relative;padding-left:26px;margin-bottom:30px;}
+  .timeline::before{
+    content:"";position:absolute;left:9px;top:6px;bottom:6px;width:2px;
+    background:linear-gradient(180deg,var(--ink) 0%,var(--organic) 100%);
+  }
+  .month-block{position:relative;margin-bottom:22px;}
+  .month-node{
+    position:absolute;left:-26px;top:2px;width:20px;height:20px;border-radius:50%;
+    background:var(--card);border:2px solid var(--organic);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--organic);font-weight:500;
+  }
+  .month-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;}
+  .month-card h3{font-size:16px;}
+  .month-card .m-label{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--organic);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;}
+  .action-list{list-style:none;margin:14px 0 0;padding:0;}
+  .action-list li{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line);}
+  .action-list li:first-child{border-top:none;}
+  .cat-tag{
+    flex-shrink:0;font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;
+    padding:3px 7px;border-radius:4px;height:fit-content;margin-top:2px;letter-spacing:.03em;
+  }
+  .cat-technical{background:var(--traffic-soft);color:var(--traffic);}
+  .cat-content{background:var(--organic-soft);color:var(--organic);}
+  .cat-links{background:var(--signal-soft);color:var(--signal);}
+  .cat-ux{background:#F1E7F1;color:#7A4A78;}
+  .cat-measurement{background:#EFEFEF;color:#555;}
+  .action-text b{display:block;font-size:13.5px;margin-bottom:2px;}
+  .action-text span{font-size:12.5px;color:var(--ink-soft);line-height:1.4;}
+  .based-on{display:block;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--traffic);margin-top:4px;}
+  .based-on::before{content:"↳ ";}
+
+  .stat-strip{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:22px;}
+  .stat{
+    flex:1;min-width:120px;background:var(--card);border:1px solid var(--line);border-radius:8px;
+    padding:12px 14px;
+  }
+  .stat .num{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:600;display:block;}
+  .stat .lbl{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;}
+  .outcome{margin-top:12px;font-size:12.5px;color:var(--ink-soft);border-left:2px solid var(--organic);padding-left:10px;}
+
+  .callout{border-radius:var(--radius);padding:16px 20px;margin-bottom:16px;}
+  .callout.wins{background:var(--signal-soft);border:1px solid #EBC896;}
+  .callout.risks{background:#F5EBE9;border:1px solid #E2C1BB;}
+  .callout h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;font-family:'IBM Plex Mono',monospace;margin-bottom:8px;}
+  .callout ul{margin:0;padding-left:18px;font-size:13px;line-height:1.6;color:var(--ink-soft);}
+
+  .insights-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin-bottom:24px;}
+  .insights-card h2{font-size:16px;margin-bottom:2px;}
+  .insights-card > p.hint{color:var(--ink-soft);font-size:12.5px;margin:4px 0 14px;}
+
+  .kp-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:720px){.kp-grid{grid-template-columns:1fr;}}
+  .kp-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  .kp-table th{text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);border-bottom:1px solid var(--line);padding:5px 6px;}
+  .kp-table td{padding:5px 6px;border-bottom:1px solid #F0EFE9;color:var(--ink-soft);}
+  .kp-table td:first-child{color:var(--ink);}
+  .kp-table tr:last-child td{border-bottom:none;}
+  .insight-group{margin-bottom:14px;}
+  .insight-group:last-child{margin-bottom:0;}
+  .insight-group h4{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.05em;
+    margin:0 0 8px;display:flex;align-items:center;gap:7px;
+  }
+  .insight-group h4 .swatch{width:8px;height:8px;border-radius:50%;display:inline-block;}
+  .insight-group ul{margin:0;padding-left:18px;font-size:13px;line-height:1.65;color:var(--ink-soft);}
+  .insight-group.declining h4 .swatch{background:var(--danger);}
+  .insight-group.improving h4 .swatch{background:var(--organic);}
+  .insight-group.striking h4 .swatch{background:var(--traffic);}
+  .insight-group.lowctr h4 .swatch{background:var(--signal);}
+
+  .out-actions{display:flex;gap:10px;margin-top:18px;}
+  .out-actions button{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;padding:9px 16px;border-radius:6px;
+    border:1px solid var(--line);background:#FBFBF9;cursor:pointer;color:var(--ink);
+  }
+  .out-actions button:hover{border-color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="app-header">
+    <div class="eyebrow">SEO / Strategy</div>
+    <h1>SEO Strategy Builder</h1>
+    <p>Drop in your Search Console and Analytics numbers, tell it what matters most, and it drafts a month-by-month SEO roadmap. Your data is only sent to Claude to generate the plan — nothing is stored.</p>
+  </header>
+
+  <div class="card">
+    <h2><span class="dot" style="background:var(--ink)"></span>Report Details</h2>
+    <p class="hint">Used for the report title and client-report style export.</p>
+    <div class="row2">
+      <div><label>Client / site name</label><input type="text" id="client-name" placeholder="e.g. Whitman Associates"></div>
+      <div><label>Website URL</label><input type="text" id="client-url" placeholder="e.g. https://example.com"></div>
+    </div>
+    <label>Report starts</label>
+    <input type="month" id="start-month">
+    <label>Comparing against</label>
+    <select id="comparison-type">
+      <option value="previous period">Previous period</option>
+      <option value="3 months prior">3 months prior</option>
+      <option value="same period last year">Year over year (YoY)</option>
+      <option value="">Not comparing / single period only</option>
+    </select>
+    <label style="margin-top:14px;">Google OAuth Client ID (for live connect — optional)</label>
+    <input type="text" id="google-client-id" placeholder="xxxxxxxxxxxx.apps.googleusercontent.com">
+    <p class="hint" style="margin-top:4px;">From your Google Cloud project's OAuth credentials. It's a public ID, not a secret — safe to leave here. Saved only in this browser.</p>
+  </div>
+
+  <div class="source-grid">
+    <!-- GSC -->
+    <div class="card">
+      <h2><span class="dot" style="background:var(--traffic)"></span>Search Console</h2>
+      <p class="hint">Query/page performance: clicks, impressions, CTR, position.</p>
+      <div class="tabbar">
+        <button class="tabbtn active" data-src="gsc" data-mode="csv">Upload CSV</button>
+        <button class="tabbtn" data-src="gsc" data-mode="manual">Type in</button>
+      </div>
+      <div id="gsc-csv">
+        <input type="file" accept=".csv" id="gsc-file">
+        <div class="filepanel" id="gsc-file-status" style="margin-top:10px;">No file yet. Export from GSC's Performance report — if you use the date picker's <b>Compare</b> tab (previous period, 3 months, or year-over-year) before exporting, this one file is enough; drops/improvements are detected automatically.</div>
+        <label style="margin-top:14px;">Or add a separate previous-period file</label>
+        <input type="file" accept=".csv" id="gsc-prev-file">
+        <div class="filepanel" id="gsc-prev-file-status" style="margin-top:10px;">Only needed if your export above is a single period, not a comparison.</div>
+      </div>
+      <div id="gsc-manual" style="display:none;">
+        <div class="row2">
+          <div><label>Total clicks</label><input type="number" id="gsc-clicks" placeholder="e.g. 12400"></div>
+          <div><label>Total impressions</label><input type="number" id="gsc-impr" placeholder="e.g. 340000"></div>
+        </div>
+        <div class="row2">
+          <div><label>Avg. CTR (%)</label><input type="number" id="gsc-ctr" placeholder="e.g. 3.7"></div>
+          <div><label>Avg. position</label><input type="number" id="gsc-pos" placeholder="e.g. 14.2"></div>
+        </div>
+        <label>Top queries (one per line — "query, clicks, position")</label>
+        <textarea id="gsc-top" placeholder="best running shoes, 120, 3.1
+trail shoes for beginners, 98, 8.4"></textarea>
+      </div>
+      <label style="margin-top:14px;">Screenshot (optional — e.g. the Performance panel)</label>
+      <input type="file" accept="image/*" id="gsc-screenshot">
+      <div class="filepanel" id="gsc-screenshot-status" style="margin-top:10px;">Adding one lets Claude read the exact figures off it and embeds it in the Word export, like a normal report.</div>
+      <img id="gsc-screenshot-preview" style="display:none;max-width:100%;border-radius:6px;margin-top:10px;border:1px solid var(--line);">
+      <label style="margin-top:14px;">Or connect live</label>
+      <button type="button" id="gsc-connect-btn" class="connect-btn">Connect Search Console</button>
+      <select id="gsc-site-picker" style="display:none;margin-top:8px;"></select>
+      <div id="gsc-date-range" style="display:none;margin-top:8px;">
+        <div class="row2">
+          <div><label>From</label><input type="date" id="gsc-date-start"></div>
+          <div><label>To</label><input type="date" id="gsc-date-end"></div>
+        </div>
+        <button type="button" id="gsc-fetch-btn" class="connect-btn" style="margin-top:8px;">Pull data</button>
+      </div>
+      <div class="filepanel" id="gsc-connect-status" style="margin-top:10px;display:none;"></div>
+    </div>
+
+    <!-- GA -->
+    <div class="card">
+      <h2><span class="dot" style="background:var(--organic)"></span>Analytics</h2>
+      <p class="hint">Organic sessions, conversions, top landing pages.</p>
+      <div class="tabbar">
+        <button class="tabbtn active" data-src="ga" data-mode="csv">Upload CSV</button>
+        <button class="tabbtn" data-src="ga" data-mode="manual">Type in</button>
+      </div>
+      <div id="ga-csv">
+        <input type="file" accept=".csv" id="ga-file">
+        <div class="filepanel" id="ga-file-status" style="margin-top:10px;">No file yet. A GA4 comparison export (two date ranges) works in one upload — drops/improvements are detected automatically.</div>
+        <label style="margin-top:14px;">Or add a separate previous-period file</label>
+        <input type="file" accept=".csv" id="ga-prev-file">
+        <div class="filepanel" id="ga-prev-file-status" style="margin-top:10px;">Only needed if your export above is a single period, not a comparison.</div>
+      </div>
+      <div id="ga-manual" style="display:none;">
+        <div class="row2">
+          <div><label>Organic sessions</label><input type="number" id="ga-sessions" placeholder="e.g. 8900"></div>
+          <div><label>Conversions</label><input type="number" id="ga-conv" placeholder="e.g. 210"></div>
+        </div>
+        <label>Conversion rate (%)</label>
+        <input type="number" id="ga-cr" placeholder="e.g. 2.4">
+        <label>Top landing pages (one per line — "url, sessions")</label>
+        <textarea id="ga-top" placeholder="/blog/best-running-shoes, 1450
+/pages/trail-shoes, 980"></textarea>
+      </div>
+      <label style="margin-top:14px;">Screenshot (optional — e.g. the Performance panel)</label>
+      <input type="file" accept="image/*" id="ga-screenshot">
+      <div class="filepanel" id="ga-screenshot-status" style="margin-top:10px;">Adding one lets Claude read the exact figures off it and embeds it in the Word export, like a normal report.</div>
+      <img id="ga-screenshot-preview" style="display:none;max-width:100%;border-radius:6px;margin-top:10px;border:1px solid var(--line);">
+      <label style="margin-top:14px;">Or connect live</label>
+      <button type="button" id="ga-connect-btn" class="connect-btn">Connect Analytics</button>
+      <select id="ga-site-picker" style="display:none;margin-top:8px;"></select>
+      <div id="ga-date-range" style="display:none;margin-top:8px;">
+        <div class="row2">
+          <div><label>From</label><input type="date" id="ga-date-start"></div>
+          <div><label>To</label><input type="date" id="ga-date-end"></div>
+        </div>
+        <button type="button" id="ga-fetch-btn" class="connect-btn" style="margin-top:8px;">Pull data</button>
+      </div>
+      <div class="filepanel" id="ga-connect-status" style="margin-top:10px;display:none;"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="dot" style="background:var(--signal)"></span>Priorities</h2>
+    <p class="hint">What should the strategy optimize for?</p>
+    <label>Goals (pick what matters)</label>
+    <div class="chips" id="goal-chips">
+      <div class="chip" data-goal="More organic traffic">More organic traffic</div>
+      <div class="chip" data-goal="Higher rankings for target keywords">Higher rankings for target keywords</div>
+      <div class="chip" data-goal="More conversions / leads">More conversions / leads</div>
+      <div class="chip" data-goal="Fix technical SEO / site health">Fix technical SEO / site health</div>
+      <div class="chip" data-goal="Expand content coverage">Expand content coverage</div>
+      <div class="chip" data-goal="Improve CTR from search">Improve CTR from search</div>
+      <div class="chip" data-goal="Build authority / backlinks">Build authority / backlinks</div>
+    </div>
+    <label>Specific pages or keywords to prioritize (optional)</label>
+    <textarea id="priority-pages" placeholder="/product/trail-shoes
+best running shoes for flat feet
+/blog/marathon-training-guide"></textarea>
+    <label>Timeframe</label>
+    <div class="tf-toggle">
+      <button class="active" data-tf="3">3 months</button>
+      <button data-tf="6">6 months</button>
+    </div>
+    <label>Anything else worth knowing (industry, site type, constraints)?</label>
+    <textarea id="context" placeholder="e.g. B2C footwear e-commerce, small team, no dev resource for site migrations this quarter"></textarea>
+    <label style="margin-top:14px;">Client's stated goal (in their words)</label>
+    <input type="text" id="client-goal" placeholder="e.g. Double revenue by end of year">
+    <label>Where is this campaign right now?</label>
+    <textarea id="campaign-stage" placeholder="e.g. 2 months in, no meaningful growth yet — OR — 12 months in, already +20% traffic and sales"></textarea>
+    <p class="hint" style="margin-top:4px;">Used to keep KPI targets realistic — an early, flat campaign shouldn't get the same target as a mature one already showing gains.</p>
+    <label style="margin-top:14px;">KPI metrics to include (optional — leave blank to let it pick what fits)</label>
+    <div class="chips" id="kpi-chips">
+      <div class="chip" data-kpi="Conversion rate improvement">Conversion rate improvement</div>
+      <div class="chip" data-kpi="Cart conversion rate">Cart conversion rate</div>
+      <div class="chip" data-kpi="Revenue improvement">Revenue improvement</div>
+      <div class="chip" data-kpi="Indexation improvement">Indexation improvement</div>
+      <div class="chip" data-kpi="GSC impressions and clicks">GSC impressions and clicks</div>
+      <div class="chip" data-kpi="Organic traffic growth">Organic traffic growth</div>
+      <div class="chip" data-kpi="Keyword count in top 10">Keyword count in top 10</div>
+      <div class="chip" data-kpi="Local map pack improvement">Local map pack improvement</div>
+    </div>
+    <label>Add specific metric(s) not listed above (comma-separated)</label>
+    <input type="text" id="kpi-custom" placeholder="e.g. Branded search volume, Newsletter signups">
+  </div>
+
+  <div class="generate-bar">
+    <button class="gen-btn" id="gen-btn">
+      <span class="spinner"></span>
+      <span id="gen-label">Generate strategy</span>
+    </button>
+  </div>
+  <div class="status-msg" id="status-msg"></div>
+
+  <div id="output"></div>
+
+</div>
+
+<script>
+const state = { gsc:{mode:'csv', csv:null, curRows:null, curFields:null, prevRows:null, prevFields:null, screenshot:null}, ga:{mode:'csv', csv:null, curRows:null, curFields:null, prevRows:null, prevFields:null, screenshot:null}, goals:new Set(), kpiMetrics:new Set(), timeframe:3 };
+
+(function initStartMonth(){
+  const now = new Date();
+  const val = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const el = document.getElementById('start-month');
+  if(el) el.value = val;
+})();
+
+// tab switching
+document.querySelectorAll('.tabbtn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const src = btn.dataset.src, mode = btn.dataset.mode;
+    document.querySelectorAll(`.tabbtn[data-src="${src}"]`).forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(`${src}-csv`).style.display = mode==='csv' ? 'block':'none';
+    document.getElementById(`${src}-manual`).style.display = mode==='manual' ? 'block':'none';
+    state[src].mode = mode;
+  });
+});
+
+// goal chips
+document.querySelectorAll('#goal-chips .chip').forEach(chip=>{
+  chip.addEventListener('click', ()=>{
+    chip.classList.toggle('active');
+    const g = chip.dataset.goal;
+    chip.classList.contains('active') ? state.goals.add(g) : state.goals.delete(g);
+  });
+});
+
+// KPI metric chips
+document.querySelectorAll('#kpi-chips .chip').forEach(chip=>{
+  chip.addEventListener('click', ()=>{
+    chip.classList.toggle('active');
+    const k = chip.dataset.kpi;
+    chip.classList.contains('active') ? state.kpiMetrics.add(k) : state.kpiMetrics.delete(k);
+  });
+});
+
+// timeframe toggle
+document.querySelectorAll('.tf-toggle button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tf-toggle button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    state.timeframe = parseInt(btn.dataset.tf,10);
+  });
+});
+
+// parseFloat alone silently truncates "12,403" to 12 (stops at the comma) and
+// mis-parses numbers copied out of Excel/Sheets with thousands separators.
+// Strip separators and stray % signs first so totals aren't quietly wrong.
+function toNum(v){
+  if(v===null || v===undefined) return NaN;
+  return parseFloat(String(v).replace(/,/g,'').replace(/%/g,'').trim());
+}
+
+function findCol(fields, keywords){
+  // Prefer an exact match (case/whitespace-insensitive) so a dimension column
+  // like "Session source / medium" doesn't shadow a metric column like "Sessions".
+  for(const k of keywords){
+    const exact = fields.find(f => f.trim().toLowerCase() === k);
+    if(exact) return exact;
+  }
+  return fields.find(f => keywords.some(k => f.toLowerCase().includes(k)));
+}
+
+const PREV_MARKERS = ['prior','previous','compare','yoy','last year','_1','(2)',' 2)','change','delta'];
+
+// Finds a metric's "current" column and, if present, its paired "previous period"
+// column — handling both PapaParse's auto-deduped "Clicks_1" and GSC/GA's own
+// descriptive "Clicks (previous period)" style comparison exports.
+function findMetricColsPair(fields, keywords){
+  const matches = fields.filter(f => keywords.some(k => f.toLowerCase().includes(k)));
+  if(!matches.length) return {current:null, previous:null};
+  const current = matches.find(f => !PREV_MARKERS.some(m => f.toLowerCase().includes(m))) || matches[0];
+  const remaining = matches.filter(f => f !== current);
+  const marked = remaining.find(f => PREV_MARKERS.some(m => f.toLowerCase().includes(m)));
+  const previous = marked || remaining[0] || null;
+  return {current, previous};
+}
+
+// If a single uploaded CSV already contains both a current and a prior-period
+// column for the key metrics (a GSC/GA "Compare" export), split it into two
+// normalized row-sets so the rest of the pipeline (which expects two files)
+// works unmodified.
+function splitComparisonCsv(rows, fields, keyKeywords, metricSpecs){
+  const keyCol = findCol(fields, keyKeywords);
+  if(!keyCol) return null;
+  const pairs = metricSpecs.map(spec => ({ name: spec.name, pair: findMetricColsPair(fields, spec.keywords) }));
+  const hasComparison = pairs.some(p => p.pair.previous);
+  if(!hasComparison) return null;
+
+  const curRows = rows.map(r=>{
+    const o = {}; o[keyCol] = r[keyCol];
+    pairs.forEach(p=>{ if(p.pair.current) o[p.name] = r[p.pair.current]; });
+    return o;
+  });
+  const prevRows = rows.map(r=>{
+    const o = {}; o[keyCol] = r[keyCol];
+    pairs.forEach(p=>{ if(p.pair.previous) o[p.name] = r[p.pair.previous]; });
+    return o;
+  });
+  const stdFields = [keyCol, ...pairs.map(p=>p.name)];
+  return { curRows, curFields: stdFields, prevRows, prevFields: stdFields };
+}
+
+function summarizeGSCRows(rows, fields){
+  const qCol = findCol(fields, ['query','page','landing']);
+  const cCol = findCol(fields, ['click']);
+  const iCol = findCol(fields, ['impression']);
+  const ctrCol = findCol(fields, ['ctr']);
+  const pCol = findCol(fields, ['position']);
+  let totalClicks=0, totalImpr=0, posWeighted=0, posWeight=0;
+  rows.forEach(r=>{
+    const c = toNum(r[cCol]); const i = toNum(r[iCol]); const p = toNum(r[pCol]);
+    if(!isNaN(c)) totalClicks+=c;
+    if(!isNaN(i)) totalImpr+=i;
+    if(!isNaN(p) && !isNaN(i) && i>0){ posWeighted+=p*i; posWeight+=i; }
+  });
+  const top = [...rows].filter(r=>!isNaN(toNum(r[cCol])))
+    .sort((a,b)=>toNum(b[cCol])-toNum(a[cCol])).slice(0,10)
+    .map(r=>`${r[qCol]} (${r[cCol]} clicks, pos ${r[pCol]||'?'})`);
+  const ctr = totalImpr>0 ? ((totalClicks/totalImpr)*100).toFixed(2) : 'n/a';
+  const avgPos = posWeight>0 ? (posWeighted/posWeight).toFixed(1) : 'n/a';
+  return `GSC data (${rows.length} rows): ${totalClicks} total clicks, ${totalImpr} total impressions, ${ctr}% CTR, avg position ${avgPos}. Top by clicks:\n${top.join('\n')}`;
+}
+
+function summarizeGARows(rows, fields){
+  const pCol = findCol(fields, ['page','landing','url']);
+  const sCol = findCol(fields, ['sessions','session']);
+  const convCol = findCol(fields, ['key event','conversion','goal']);
+  let totalSessions=0, totalConv=0;
+  rows.forEach(r=>{
+    const s = toNum(r[sCol]); const c = toNum(r[convCol]);
+    if(!isNaN(s)) totalSessions+=s;
+    if(!isNaN(c)) totalConv+=c;
+  });
+  const top = [...rows].filter(r=>!isNaN(toNum(r[sCol])))
+    .sort((a,b)=>toNum(b[sCol])-toNum(a[sCol])).slice(0,10)
+    .map(r=>`${r[pCol]} (${r[sCol]} sessions)`);
+  return `GA data (${rows.length} rows): ${totalSessions} total sessions, ${totalConv} total conversions. Top pages by sessions:\n${top.join('\n')}`;
+}
+
+function computeGSCInsights(curRows, curFields, prevRows, prevFields){
+  const insights = { declining:[], improving:[], striking:[], lowCtr:[] };
+  if(!curRows || !curRows.length) return insights;
+  const qCol = findCol(curFields, ['query','page','landing']);
+  const cCol = findCol(curFields, ['click']);
+  const iCol = findCol(curFields, ['impression']);
+  const pCol = findCol(curFields, ['position']);
+  if(!qCol) return insights;
+
+  const parsedCur = curRows.map(r=>({
+    query: (r[qCol]||'').trim(),
+    clicks: toNum(r[cCol])||0,
+    impressions: toNum(r[iCol])||0,
+    position: toNum(r[pCol])
+  })).filter(r=>r.query);
+
+  let totalClicks=0, totalImpr=0;
+  parsedCur.forEach(r=>{ totalClicks+=r.clicks; totalImpr+=r.impressions; });
+  const avgCtr = totalImpr>0 ? (totalClicks/totalImpr)*100 : 0;
+
+  // Striking distance: position 11-20, meaningful impressions
+  insights.striking = parsedCur
+    .filter(r=>!isNaN(r.position) && r.position>=11 && r.position<=20 && r.impressions>=20)
+    .sort((a,b)=>b.impressions-a.impressions)
+    .slice(0,10)
+    .map(r=>`"${r.query}" — position ${r.position.toFixed(1)}, ${r.impressions} impressions`);
+
+  // Low CTR opportunity: decent impressions, CTR well below average, ranks under 20
+  insights.lowCtr = parsedCur
+    .filter(r=>{
+      const ctr = r.impressions>0 ? (r.clicks/r.impressions)*100 : 0;
+      return r.impressions>=30 && ctr < avgCtr*0.5 && (isNaN(r.position) || r.position<=20);
+    })
+    .sort((a,b)=>b.impressions-a.impressions)
+    .slice(0,10)
+    .map(r=>{
+      const ctr = r.impressions>0 ? ((r.clicks/r.impressions)*100).toFixed(1) : '0';
+      return `"${r.query}" — ${r.impressions} impressions but only ${ctr}% CTR`;
+    });
+
+  if(prevRows && prevRows.length){
+    const pQCol = findCol(prevFields, ['query','page','landing']);
+    const pCCol = findCol(prevFields, ['click']);
+    const pPCol = findCol(prevFields, ['position']);
+    const prevMap = new Map();
+    prevRows.forEach(r=>{
+      const key = (r[pQCol]||'').trim().toLowerCase();
+      if(key) prevMap.set(key, { clicks: toNum(r[pCCol])||0, position: toNum(r[pPCol]) });
+    });
+    const matched = parsedCur
+      .map(r=>{
+        const prev = prevMap.get(r.query.toLowerCase());
+        if(!prev || isNaN(r.position) || isNaN(prev.position)) return null;
+        return { ...r, prevPosition: prev.position, prevClicks: prev.clicks, deltaPos: r.position - prev.position, deltaClicks: r.clicks - prev.clicks };
+      })
+      .filter(Boolean);
+
+    insights.declining = matched
+      .filter(r=>r.deltaPos>1.5)
+      .sort((a,b)=>b.deltaPos-a.deltaPos)
+      .slice(0,10)
+      .map(r=>`"${r.query}" — dropped from position ${r.prevPosition.toFixed(1)} to ${r.position.toFixed(1)} (${r.deltaClicks>=0?'+':''}${r.deltaClicks} clicks)`);
+
+    insights.improving = matched
+      .filter(r=>r.deltaPos<-1.5)
+      .sort((a,b)=>a.deltaPos-b.deltaPos)
+      .slice(0,10)
+      .map(r=>`"${r.query}" — improved from position ${r.prevPosition.toFixed(1)} to ${r.position.toFixed(1)} (${r.deltaClicks>=0?'+':''}${r.deltaClicks} clicks)`);
+  }
+  return insights;
+}
+
+function computeGAInsights(curRows, curFields, prevRows, prevFields){
+  const insights = { decliningPages:[], lowConvertingPages:[] };
+  if(!curRows || !curRows.length) return insights;
+  const pCol = findCol(curFields, ['page','landing','url']);
+  const sCol = findCol(curFields, ['sessions','session']);
+  const convCol = findCol(curFields, ['key event','conversion','goal']);
+  if(!pCol) return insights;
+
+  const parsedCur = curRows.map(r=>({
+    page: (r[pCol]||'').trim(),
+    sessions: toNum(r[sCol])||0,
+    conversions: convCol ? (toNum(r[convCol])||0) : null
+  })).filter(r=>r.page);
+
+  if(convCol){
+    const sessionsSorted = [...parsedCur].sort((a,b)=>b.sessions-a.sessions);
+    const median = sessionsSorted.length ? sessionsSorted[Math.floor(sessionsSorted.length/2)].sessions : 0;
+    insights.lowConvertingPages = parsedCur
+      .filter(r=>r.sessions>=median && r.sessions>0 && r.conversions===0)
+      .sort((a,b)=>b.sessions-a.sessions)
+      .slice(0,10)
+      .map(r=>`${r.page} — ${r.sessions} sessions, 0 conversions`);
+  }
+
+  if(prevRows && prevRows.length){
+    const pPCol = findCol(prevFields, ['page','landing','url']);
+    const pSCol = findCol(prevFields, ['sessions','session']);
+    const prevMap = new Map();
+    prevRows.forEach(r=>{
+      const key = (r[pPCol]||'').trim().toLowerCase();
+      if(key) prevMap.set(key, toNum(r[pSCol])||0);
+    });
+    const matched = parsedCur
+      .map(r=>{
+        const prevSessions = prevMap.get(r.page.toLowerCase());
+        if(prevSessions===undefined) return null;
+        return { ...r, prevSessions, delta: r.sessions - prevSessions };
+      })
+      .filter(Boolean);
+    insights.decliningPages = matched
+      .filter(r=>r.delta<0 && r.prevSessions>=10)
+      .sort((a,b)=>a.delta-b.delta)
+      .slice(0,10)
+      .map(r=>`${r.page} — sessions dropped from ${r.prevSessions} to ${r.sessions}`);
+  }
+  return insights;
+}
+
+function computeBaseline(gscCur, gscFields, gaCur, gaFields){
+  const baseline = {};
+  if(gscCur && gscCur.length){
+    const cCol = findCol(gscFields, ['click']);
+    const iCol = findCol(gscFields, ['impression']);
+    const pCol = findCol(gscFields, ['position']);
+    let clicks=0, impr=0, posWeighted=0, posWeight=0;
+    gscCur.forEach(r=>{
+      const c=toNum(r[cCol]), i=toNum(r[iCol]), p=toNum(r[pCol]);
+      if(!isNaN(c)) clicks+=c;
+      if(!isNaN(i)) impr+=i;
+      if(!isNaN(p) && !isNaN(i) && i>0){ posWeighted+=p*i; posWeight+=i; }
+    });
+    baseline.clicks = clicks;
+    baseline.impressions = impr;
+    baseline.ctr = impr>0 ? (clicks/impr)*100 : null;
+    baseline.avgPosition = posWeight>0 ? posWeighted/posWeight : null;
+    baseline.queryCount = gscCur.length;
+  }
+  if(gaCur && gaCur.length){
+    const sCol = findCol(gaFields, ['sessions','session']);
+    const convCol = findCol(gaFields, ['key event','conversion','goal']);
+    let sessions=0, conv=0;
+    gaCur.forEach(r=>{
+      const s=toNum(r[sCol]), c=toNum(r[convCol]);
+      if(!isNaN(s)) sessions+=s;
+      if(!isNaN(c)) conv+=c;
+    });
+    baseline.sessions = sessions;
+    baseline.conversions = conv;
+    baseline.conversionRate = sessions>0 ? (conv/sessions)*100 : null;
+    baseline.pageCount = gaCur.length;
+  }
+  return baseline;
+}
+
+function insightsToPromptText(gscInsights, gaInsights){
+  let lines = [];
+  if(gscInsights.declining.length) lines.push(`Declining queries (losing rank/clicks):\n${gscInsights.declining.join('\n')}`);
+  if(gscInsights.improving.length) lines.push(`Improving queries:\n${gscInsights.improving.join('\n')}`);
+  if(gscInsights.striking.length) lines.push(`Striking-distance queries (position 11-20, worth pushing to page 1):\n${gscInsights.striking.join('\n')}`);
+  if(gscInsights.lowCtr.length) lines.push(`Low-CTR opportunities (good impressions, weak click-through — likely a title/meta fix):\n${gscInsights.lowCtr.join('\n')}`);
+  if(gaInsights.decliningPages.length) lines.push(`Pages losing traffic:\n${gaInsights.decliningPages.join('\n')}`);
+  if(gaInsights.lowConvertingPages.length) lines.push(`High-traffic pages with zero conversions:\n${gaInsights.lowConvertingPages.join('\n')}`);
+  return lines.length ? lines.join('\n\n') : 'No row-level signals detected (manual entry or single-period data only).';
+}
+
+const METRIC_SPECS = {
+  gsc: [
+    {name:'Clicks', keywords:['click']},
+    {name:'Impressions', keywords:['impression']},
+    {name:'CTR', keywords:['ctr']},
+    {name:'Position', keywords:['position']}
+  ],
+  ga: [
+    {name:'Sessions', keywords:['sessions','session']},
+    {name:'Key events', keywords:['key event','conversion','goal']}
+  ]
+};
+const KEY_KEYWORDS = { gsc:['query','page','landing'], ga:['page','landing','url'] };
+
+function setupFileInput(id, statusId, kind, period){
+  document.getElementById(id).addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const statusEl = document.getElementById(statusId);
+    statusEl.textContent = 'Parsing...';
+    Papa.parse(file, { header:true, skipEmptyLines:true, comments:'#', complete: (res)=>{
+      const rows = res.data; const fields = res.meta.fields || [];
+      if(period==='current'){
+        const split = splitComparisonCsv(rows, fields, KEY_KEYWORDS[kind], METRIC_SPECS[kind]);
+        if(split){
+          state[kind].curRows = split.curRows; state[kind].curFields = split.curFields;
+          state[kind].prevRows = split.prevRows; state[kind].prevFields = split.prevFields;
+          state[kind].csv = kind==='gsc' ? summarizeGSCRows(split.curRows, split.curFields) : summarizeGARows(split.curRows, split.curFields);
+          statusEl.textContent = `Loaded ${rows.length} rows from ${file.name} — comparison data detected, previous period auto-filled.`;
+        } else {
+          const summary = kind==='gsc' ? summarizeGSCRows(rows, fields) : summarizeGARows(rows, fields);
+          state[kind].csv = summary;
+          state[kind].curRows = rows; state[kind].curFields = fields;
+          statusEl.textContent = `Loaded ${rows.length} rows from ${file.name}`;
+        }
+      } else {
+        state[kind].prevRows = rows; state[kind].prevFields = fields;
+        statusEl.textContent = `Loaded ${rows.length} rows from ${file.name}`;
+      }
+      statusEl.classList.add('ready');
+    }, error:()=>{ statusEl.textContent='Could not parse that file — check it is a valid CSV.'; } });
+  });
+}
+setupFileInput('gsc-file','gsc-file-status','gsc','current');
+setupFileInput('ga-file','ga-file-status','ga','current');
+setupFileInput('gsc-prev-file','gsc-prev-file-status','gsc','previous');
+setupFileInput('ga-prev-file','ga-prev-file-status','ga','previous');
+
+function setupScreenshotInput(id, statusId, previewId, kind){
+  document.getElementById(id).addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const statusEl = document.getElementById(statusId);
+    const previewEl = document.getElementById(previewId);
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      const dataUrl = reader.result;
+      const base64 = dataUrl.split(',')[1];
+      state[kind].screenshot = { dataUrl, base64, mediaType: file.type || 'image/png' };
+      previewEl.src = dataUrl;
+      previewEl.style.display = 'block';
+      statusEl.textContent = `${file.name} attached — will be read by Claude and embedded in the Word export.`;
+      statusEl.classList.add('ready');
+    };
+    reader.onerror = ()=>{ statusEl.textContent = 'Could not read that image.'; };
+    reader.readAsDataURL(file);
+  });
+}
+setupScreenshotInput('gsc-screenshot','gsc-screenshot-status','gsc-screenshot-preview','gsc');
+setupScreenshotInput('ga-screenshot','ga-screenshot-status','ga-screenshot-preview','ga');
+
+// ---------- Live GSC/GA connect (Google Identity Services token model) ----------
+// Uses Google's browser-only OAuth flow — a public Client ID, no secret, no
+// backend. Requires this page to be hosted at a fixed HTTPS origin that
+// matches the Client ID's "Authorized JavaScript origins" in Google Cloud.
+
+(function initClientId(){
+  const el = document.getElementById('google-client-id');
+  const saved = localStorage.getItem('seoTool.googleClientId');
+  if(saved) el.value = saved;
+  el.addEventListener('change', ()=> localStorage.setItem('seoTool.googleClientId', el.value.trim()));
+})();
+
+function fmtDate(d){ return d.toISOString().slice(0,10); }
+
+(function initDefaultDateRanges(){
+  const end = new Date(); end.setDate(end.getDate()-4); // GSC's ~2-3 day processing lag
+  const start = new Date(end); start.setDate(start.getDate()-89); // ~3 months
+  ['gsc-date-end','ga-date-end'].forEach(id=>{ const e=document.getElementById(id); if(e) e.value = fmtDate(end); });
+  ['gsc-date-start','ga-date-start'].forEach(id=>{ const e=document.getElementById(id); if(e) e.value = fmtDate(start); });
+})();
+
+function computePreviousRange(startStr, endStr, comparisonType){
+  const start = new Date(startStr+'T00:00:00'), end = new Date(endStr+'T00:00:00');
+  const lengthDays = Math.round((end-start)/86400000);
+  let prevStart, prevEnd;
+  if(comparisonType === '3 months prior'){
+    prevStart = new Date(start); prevStart.setMonth(prevStart.getMonth()-3);
+    prevEnd = new Date(end); prevEnd.setMonth(prevEnd.getMonth()-3);
+  } else if(comparisonType === 'same period last year'){
+    prevStart = new Date(start); prevStart.setFullYear(prevStart.getFullYear()-1);
+    prevEnd = new Date(end); prevEnd.setFullYear(prevEnd.getFullYear()-1);
+  } else {
+    // previous period: same length, immediately before
+    prevEnd = new Date(start); prevEnd.setDate(prevEnd.getDate()-1);
+    prevStart = new Date(prevEnd); prevStart.setDate(prevStart.getDate()-lengthDays);
+  }
+  return { prevStart: fmtDate(prevStart), prevEnd: fmtDate(prevEnd) };
+}
+
+function getClientId(){
+  return document.getElementById('google-client-id').value.trim();
+}
+
+function waitForGoogleScript(timeoutMs){
+  return new Promise((resolve, reject)=>{
+    const start = Date.now();
+    (function poll(){
+      if(window.google && google.accounts && google.accounts.oauth2){ resolve(); return; }
+      if(Date.now()-start > timeoutMs){ reject(new Error('Google\'s sign-in script never loaded. This usually means a browser privacy/ad-blocker extension is blocking accounts.google.com — try disabling it for this site, or try a different browser, then reload.')); return; }
+      setTimeout(poll, 150);
+    })();
+  });
+}
+
+async function requestGoogleToken(scope){
+  const clientId = getClientId();
+  if(!clientId) throw new Error('Add your Google OAuth Client ID above first.');
+  await waitForGoogleScript(6000);
+  return new Promise((resolve, reject)=>{
+    try{
+      const client = google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: scope,
+        callback: (resp)=>{
+          if(resp && resp.access_token) resolve(resp.access_token);
+          else reject(new Error('No access token returned.'));
+        },
+        error_callback: (err)=> reject(new Error(err && err.type ? err.type : 'Google sign-in was cancelled or failed.'))
+      });
+      client.requestAccessToken();
+    }catch(e){ reject(e); }
+  });
+}
+
+// ---- Search Console ----
+document.getElementById('gsc-connect-btn').addEventListener('click', async ()=>{
+  const statusEl = document.getElementById('gsc-connect-status');
+  statusEl.style.display = 'block'; statusEl.classList.remove('err','ready'); statusEl.textContent = 'Connecting…';
+  try{
+    const token = await requestGoogleToken('https://www.googleapis.com/auth/webmasters.readonly');
+    state.gsc.accessToken = token;
+    const res = await fetch('https://www.googleapis.com/webmasters/v3/sites', { headers:{Authorization:`Bearer ${token}`} });
+    if(!res.ok) throw new Error(`Search Console API error (${res.status}). Check the API is enabled and your account has access to a property.`);
+    const data = await res.json();
+    const sites = (data.siteEntry||[]).map(s=>s.siteUrl);
+    if(!sites.length) throw new Error('No Search Console properties found for this account.');
+    const picker = document.getElementById('gsc-site-picker');
+    picker.innerHTML = sites.map(s=>`<option value="${s}">${s}</option>`).join('');
+    picker.style.display = 'block';
+    document.getElementById('gsc-date-range').style.display = 'block';
+    statusEl.textContent = `Connected — ${sites.length} propert${sites.length===1?'y':'ies'} found. Pick one, set dates, then Pull data.`;
+    statusEl.classList.add('ready');
+  }catch(e){
+    statusEl.textContent = e.message;
+    statusEl.classList.add('err');
+  }
+});
+
+document.getElementById('gsc-fetch-btn').addEventListener('click', async ()=>{
+  const statusEl = document.getElementById('gsc-connect-status');
+  statusEl.classList.remove('err','ready'); statusEl.textContent = 'Pulling data…';
+  try{
+    const site = document.getElementById('gsc-site-picker').value;
+    const startDate = document.getElementById('gsc-date-start').value;
+    const endDate = document.getElementById('gsc-date-end').value;
+    const comparisonType = document.getElementById('comparison-type').value;
+    const token = state.gsc.accessToken;
+    if(!token) throw new Error('Connect first.');
+
+    async function queryRange(s, e){
+      const res = await fetch(`https://www.googleapis.com/webmasters/v3/sites/${encodeURIComponent(site)}/searchAnalytics/query`, {
+        method:'POST',
+        headers:{Authorization:`Bearer ${token}`, 'Content-Type':'application/json'},
+        body: JSON.stringify({ startDate:s, endDate:e, dimensions:['query'], rowLimit:25000 })
+      });
+      if(!res.ok) throw new Error(`Search Console query failed (${res.status}).`);
+      const data = await res.json();
+      return (data.rows||[]).map(r=>({
+        Query: r.keys[0], Clicks: r.clicks, Impressions: r.impressions,
+        CTR: ((r.ctr||0)*100).toFixed(2)+'%', Position: r.position
+      }));
+    }
+
+    const curRows = await queryRange(startDate, endDate);
+    const stdFields = ['Query','Clicks','Impressions','CTR','Position'];
+    state.gsc.curRows = curRows; state.gsc.curFields = stdFields;
+    state.gsc.csv = summarizeGSCRows(curRows, stdFields);
+
+    if(comparisonType){
+      const {prevStart, prevEnd} = computePreviousRange(startDate, endDate, comparisonType);
+      const prevRows = await queryRange(prevStart, prevEnd);
+      state.gsc.prevRows = prevRows; state.gsc.prevFields = stdFields;
+      statusEl.textContent = `Pulled ${curRows.length} rows (${startDate} → ${endDate}) plus ${prevRows.length} rows for comparison.`;
+    } else {
+      state.gsc.prevRows = null; state.gsc.prevFields = null;
+      statusEl.textContent = `Pulled ${curRows.length} rows (${startDate} → ${endDate}).`;
+    }
+    statusEl.classList.add('ready');
+  }catch(e){
+    statusEl.textContent = e.message;
+    statusEl.classList.add('err');
+  }
+});
+
+// ---- Analytics (GA4) ----
+document.getElementById('ga-connect-btn').addEventListener('click', async ()=>{
+  const statusEl = document.getElementById('ga-connect-status');
+  statusEl.style.display = 'block'; statusEl.classList.remove('err','ready'); statusEl.textContent = 'Connecting…';
+  try{
+    const token = await requestGoogleToken('https://www.googleapis.com/auth/analytics.readonly');
+    state.ga.accessToken = token;
+    const res = await fetch('https://analyticsadmin.googleapis.com/v1beta/accountSummaries', { headers:{Authorization:`Bearer ${token}`} });
+    if(!res.ok) throw new Error(`Analytics API error (${res.status}). Check the API is enabled and your account has access to a GA4 property.`);
+    const data = await res.json();
+    const props = [];
+    (data.accountSummaries||[]).forEach(acc=>{
+      (acc.propertySummaries||[]).forEach(p=>{
+        props.push({ id: p.property.split('/')[1], label: `${p.displayName} (${acc.displayName})` });
+      });
+    });
+    if(!props.length) throw new Error('No GA4 properties found for this account.');
+    const picker = document.getElementById('ga-site-picker');
+    picker.innerHTML = props.map(p=>`<option value="${p.id}">${p.label}</option>`).join('');
+    picker.style.display = 'block';
+    document.getElementById('ga-date-range').style.display = 'block';
+    statusEl.textContent = `Connected — ${props.length} propert${props.length===1?'y':'ies'} found. Pick one, set dates, then Pull data.`;
+    statusEl.classList.add('ready');
+  }catch(e){
+    statusEl.textContent = e.message;
+    statusEl.classList.add('err');
+  }
+});
+
+document.getElementById('ga-fetch-btn').addEventListener('click', async ()=>{
+  const statusEl = document.getElementById('ga-connect-status');
+  statusEl.classList.remove('err','ready'); statusEl.textContent = 'Pulling data…';
+  try{
+    const propertyId = document.getElementById('ga-site-picker').value;
+    const startDate = document.getElementById('ga-date-start').value;
+    const endDate = document.getElementById('ga-date-end').value;
+    const comparisonType = document.getElementById('comparison-type').value;
+    const token = state.ga.accessToken;
+    if(!token) throw new Error('Connect first.');
+
+    async function runReport(s, e){
+      const res = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`, {
+        method:'POST',
+        headers:{Authorization:`Bearer ${token}`, 'Content-Type':'application/json'},
+        body: JSON.stringify({
+          dateRanges:[{startDate:s, endDate:e}],
+          dimensions:[{name:'landingPage'}],
+          metrics:[{name:'sessions'},{name:'keyEvents'}],
+          limit: 25000
+        })
+      });
+      if(!res.ok) throw new Error(`Analytics report failed (${res.status}).`);
+      const data = await res.json();
+      return (data.rows||[]).map(r=>({
+        'Landing page': r.dimensionValues[0].value,
+        'Sessions': r.metricValues[0].value,
+        'Key events': r.metricValues[1] ? r.metricValues[1].value : '0'
+      }));
+    }
+
+    const curRows = await runReport(startDate, endDate);
+    const stdFields = ['Landing page','Sessions','Key events'];
+    state.ga.curRows = curRows; state.ga.curFields = stdFields;
+    state.ga.csv = summarizeGARows(curRows, stdFields);
+
+    if(comparisonType){
+      const {prevStart, prevEnd} = computePreviousRange(startDate, endDate, comparisonType);
+      const prevRows = await runReport(prevStart, prevEnd);
+      state.ga.prevRows = prevRows; state.ga.prevFields = stdFields;
+      statusEl.textContent = `Pulled ${curRows.length} rows (${startDate} → ${endDate}) plus ${prevRows.length} rows for comparison.`;
+    } else {
+      state.ga.prevRows = null; state.ga.prevFields = null;
+      statusEl.textContent = `Pulled ${curRows.length} rows (${startDate} → ${endDate}).`;
+    }
+    statusEl.classList.add('ready');
+  }catch(e){
+    statusEl.textContent = e.message;
+    statusEl.classList.add('err');
+  }
+});
+
+function gatherGSCSummary(){
+  if(state.gsc.mode==='csv') return state.gsc.csv;
+  const clicks=document.getElementById('gsc-clicks').value;
+  const impr=document.getElementById('gsc-impr').value;
+  const ctr=document.getElementById('gsc-ctr').value;
+  const pos=document.getElementById('gsc-pos').value;
+  const top=document.getElementById('gsc-top').value.trim();
+  if(!clicks && !impr && !top) return null;
+  return `GSC data (manual entry): ${clicks||'?'} clicks, ${impr||'?'} impressions, ${ctr||'?'}% CTR, avg position ${pos||'?'}. Top queries:\n${top}`;
+}
+function gatherGASummary(){
+  if(state.ga.mode==='csv') return state.ga.csv;
+  const sessions=document.getElementById('ga-sessions').value;
+  const conv=document.getElementById('ga-conv').value;
+  const cr=document.getElementById('ga-cr').value;
+  const top=document.getElementById('ga-top').value.trim();
+  if(!sessions && !top) return null;
+  return `GA data (manual entry): ${sessions||'?'} organic sessions, ${conv||'?'} conversions, ${cr||'?'}% conversion rate. Top pages:\n${top}`;
+}
+
+// A generic category label (e.g. "query cluster", "keyword group", or a bare
+// "pos 7.35 ..." fragment) is not real data — strip these so the report never
+// shows a placeholder pretending to be a specific keyword or page.
+const GENERIC_KP_PATTERN = /\b(cluster|keyword group|query group|location group|generic|placeholder)\b/i;
+const BARE_POSITION_PATTERN = /^\s*pos(ition)?\.?\s*[\d.]+\s*$/i;
+
+function sanitizeMonths(months){
+  return months.map(m=>({
+    ...m,
+    actions: (m.actions||[]).map(a=>({
+      ...a,
+      target_keywords_pages: (a.target_keywords_pages||[]).filter(k=>
+        k && !GENERIC_KP_PATTERN.test(k) && !BARE_POSITION_PATTERN.test(k)
+      )
+    }))
+  }));
+}
+
+function safeParseJSON(text){
+  try{ return JSON.parse(text); }catch(e){}
+  // Likely truncated mid-response. Try to salvage complete "months" entries.
+  let repaired = text;
+  // Cut back to the last complete object inside the months array
+  const lastCompleteMonth = repaired.lastIndexOf('}');
+  if(lastCompleteMonth === -1) throw new Error('Response was empty or unreadable.');
+  repaired = repaired.slice(0, lastCompleteMonth+1);
+  // Balance any open brackets/braces left over
+  const opens = (repaired.match(/[\{\[]/g)||[]).length;
+  const closes = (repaired.match(/[\}\]]/g)||[]).length;
+  let diff = opens - closes;
+  // Close arrays/objects in a reasonable order: array first, then object, repeating
+  while(diff > 0){
+    repaired += repaired.trim().endsWith(']') ? '}' : ']';
+    diff--;
+  }
+  try{ return JSON.parse(repaired); }
+  catch(e){ throw new Error('The model\'s response was cut off and could not be repaired. Try again, or switch to a 3-month plan.'); }
+}
+
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function attachCalendarLabels(months, startMonthVal){
+  let baseYear, baseMonthIdx; // baseMonthIdx 0-11
+  if(startMonthVal){
+    const [y,m] = startMonthVal.split('-').map(Number);
+    baseYear = y; baseMonthIdx = m-1;
+  } else {
+    const now = new Date();
+    baseYear = now.getFullYear(); baseMonthIdx = now.getMonth();
+  }
+  return months.map(m=>{
+    const offset = (m.month||1)-1;
+    const idx = baseMonthIdx + offset;
+    const year = baseYear + Math.floor(idx/12);
+    const monthIdx = ((idx%12)+12)%12;
+    const quarterNum = Math.floor(monthIdx/3)+1;
+    return { ...m, month_label: `${MONTH_NAMES[monthIdx]} ${year}`, quarter_label: `Q${quarterNum} ${year}` };
+  });
+}
+
+function buildKeywordPageReference(){
+  const gscRows = state.gsc.curRows, gscFields = state.gsc.curFields;
+  const gaRows = state.ga.curRows, gaFields = state.ga.curFields;
+  let keywords = [], pages = [];
+  if(gscRows && gscRows.length && gscFields){
+    const qCol = findCol(gscFields, ['query','page','landing']);
+    const cCol = findCol(gscFields, ['click']);
+    const iCol = findCol(gscFields, ['impression']);
+    const pCol = findCol(gscFields, ['position']);
+    if(qCol){
+      keywords = gscRows.map(r=>({name:(r[qCol]||'').trim(), clicks:toNum(r[cCol])||0, impressions:toNum(r[iCol])||0, position:toNum(r[pCol])}))
+        .filter(r=>r.name)
+        .sort((a,b)=>b.clicks-a.clicks)
+        .slice(0,15);
+    }
+  }
+  if(gaRows && gaRows.length && gaFields){
+    const pgCol = findCol(gaFields, ['page','landing','url']);
+    const sCol = findCol(gaFields, ['sessions','session']);
+    if(pgCol){
+      pages = gaRows.map(r=>({name:(r[pgCol]||'').trim(), sessions:toNum(r[sCol])||0}))
+        .filter(r=>r.name)
+        .sort((a,b)=>b.sessions-a.sessions)
+        .slice(0,15);
+    }
+  }
+  return {keywords, pages};
+}
+
+async function callGenerateAPI(promptText, imageBlocks, maxTokens){
+  let messageContent = promptText;
+  if(imageBlocks && imageBlocks.length){
+    messageContent = [...imageBlocks, {type:'text', text: promptText}];
+  }
+  const resp = await fetch('/.netlify/functions/generate', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      model:'claude-sonnet-4-6',
+      max_tokens: maxTokens,
+      stream: true,
+      messages:[{role:'user', content: messageContent}]
+    })
+  });
+
+  if(!resp.ok){
+    // Error responses are a small buffered JSON body, not a stream.
+    let errBody = {};
+    try{ errBody = await resp.json(); }catch(e){}
+    const msg = errBody.error?.message || errBody.error || `Request failed (${resp.status}).`;
+    throw new Error(`API error: ${msg}`);
+  }
+
+  // Read the streamed Server-Sent Events response, accumulating text deltas
+  // as they arrive. This is what lets the request stay open past Netlify's
+  // 40-second "must send response headers" limit — headers arrive the
+  // instant streaming starts, and there's no further cap while it continues.
+  const reader = resp.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let fullText = '';
+  let streamError = null;
+
+  while(true){
+    const {done, value} = await reader.read();
+    if(done) break;
+    buffer += decoder.decode(value, {stream:true});
+    const lines = buffer.split('\n');
+    buffer = lines.pop(); // keep any incomplete trailing line for next chunk
+    for(const line of lines){
+      if(!line.startsWith('data: ')) continue;
+      const jsonStr = line.slice(6).trim();
+      if(!jsonStr) continue;
+      try{
+        const evt = JSON.parse(jsonStr);
+        if(evt.type === 'content_block_delta' && evt.delta && evt.delta.type === 'text_delta'){
+          fullText += evt.delta.text;
+        } else if(evt.type === 'error'){
+          streamError = evt.error?.message || 'Stream error.';
+        }
+      }catch(e){ /* ignore partial/non-JSON fragments */ }
+    }
+  }
+
+  if(streamError) throw new Error(`API error: ${streamError}`);
+  if(!fullText.trim()) throw new Error('The API responded but sent no text content — check the browser console (F12) for details.');
+
+  const clean = fullText.trim().replace(/^```json/,'').replace(/^```/,'').replace(/```$/,'').trim();
+  return safeParseJSON(clean);
+}
+
+let lastResult = null;
+
+document.getElementById('gen-btn').addEventListener('click', async ()=>{
+  const gscSummary = gatherGSCSummary();
+  const gaSummary = gatherGASummary();
+  const statusEl = document.getElementById('status-msg');
+  statusEl.classList.remove('err');
+
+  if(!gscSummary && !gaSummary && !state.gsc.screenshot && !state.ga.screenshot){
+    statusEl.textContent = 'Add at least some GSC or GA data (or a screenshot) first.';
+    statusEl.classList.add('err');
+    return;
+  }
+  if(state.goals.size===0){
+    statusEl.textContent = 'Pick at least one goal so the plan knows what to optimize for.';
+    statusEl.classList.add('err');
+    return;
+  }
+
+  const btn = document.getElementById('gen-btn');
+  btn.disabled = true; btn.classList.add('loading');
+  document.getElementById('gen-label').textContent = 'Building your roadmap…';
+  statusEl.textContent = '';
+  document.getElementById('output').style.display='none';
+
+  const priorityPages = document.getElementById('priority-pages').value.trim();
+  const context = document.getElementById('context').value.trim();
+  const clientGoal = document.getElementById('client-goal').value.trim();
+  const campaignStage = document.getElementById('campaign-stage').value.trim();
+  const customKpiMetrics = document.getElementById('kpi-custom').value.trim()
+    .split(',').map(s=>s.trim()).filter(Boolean);
+  const selectedKpiMetrics = [...state.kpiMetrics, ...customKpiMetrics];
+  const months = state.timeframe;
+  const clientName = document.getElementById('client-name').value.trim() || 'this site';
+  const clientUrl = document.getElementById('client-url').value.trim();
+  const startMonthVal = document.getElementById('start-month').value; // "YYYY-MM"
+  const comparisonType = document.getElementById('comparison-type').value;
+
+  const gscInsights = computeGSCInsights(state.gsc.curRows, state.gsc.curFields, state.gsc.prevRows, state.gsc.prevFields);
+  const gaInsights = computeGAInsights(state.ga.curRows, state.ga.curFields, state.ga.prevRows, state.ga.prevFields);
+  const insightsText = insightsToPromptText(gscInsights, gaInsights);
+  const baseline = computeBaseline(state.gsc.curRows, state.gsc.curFields, state.ga.curRows, state.ga.curFields);
+  const rowCapNote = (baseline.queryCount >= 1000) ? ' Note: this export hit (or is at) GSC\'s 1,000-row UI export cap, so these totals are a floor, not the true site-wide total — mention this caveat in the narrative rather than stating the numbers as exact.' : '';
+  const baselineText = [
+    baseline.clicks!==undefined ? `GSC baseline: ${baseline.clicks} clicks, ${baseline.impressions} impressions, ${baseline.ctr?.toFixed(2)}% CTR, avg position ${baseline.avgPosition?.toFixed(1)} across ${baseline.queryCount} rows.${rowCapNote}` : null,
+    baseline.sessions!==undefined ? `GA baseline: ${baseline.sessions} sessions, ${baseline.conversions} conversions, ${baseline.conversionRate?.toFixed(2)}% conversion rate across ${baseline.pageCount} pages.` : null
+  ].filter(Boolean).join('\n') || 'No aggregate baseline available (manual entry only).';
+
+  const baseContext = `
+Client: ${clientName}${clientUrl ? ' ('+clientUrl+')' : ''}
+
+Search Console summary:
+${gscSummary || 'Not provided.'}
+
+Analytics summary:
+${gaSummary || 'Not provided.'}
+
+Baseline metrics (use these to make expected outcomes concrete and quantified, e.g. "lift clicks from X toward Y"):
+${baselineText}
+
+Row-level data signals (from the raw CSV rows — reference these specific keywords/pages in your actions where relevant):
+${insightsText}
+
+Goals: ${[...state.goals].join(', ')}
+Priority pages/keywords: ${priorityPages || 'None specified.'}
+Additional context: ${context || 'None.'}
+Client's stated goal (in their own words): ${clientGoal || 'Not specified.'}
+Where this campaign stands right now: ${campaignStage || 'Not specified — assume early/unproven unless the data above shows clear existing growth.'}
+`;
+
+  try{
+    let allMonths = [];
+    let summaryText = '', gscNarrative = '', gaNarrative = '', benchmarkKpis = [];
+    let quickWins = [], risks = [];
+
+    // --- Call 1: overview only — summary, narratives, KPIs. Small and fast; carries the screenshots. ---
+    const hasShots = state.gsc.screenshot || state.ga.screenshot;
+    const shotAsk = hasShots ? `
+${state.gsc.screenshot ? 'The first image is a screenshot of the GSC Performance panel — read the exact clicks/impressions/CTR/position figures (current vs previous) directly off it and use them in "gsc_narrative".' : ''}
+${state.ga.screenshot ? `${state.gsc.screenshot ? 'The next' : 'The first'} image is a screenshot of the GA Performance panel — read the exact sessions/conversions figures (current vs previous) directly off it and use them in "ga_narrative".` : ''}` : '';
+    const metricSelectionAsk = selectedKpiMetrics.length
+      ? `Include exactly these metrics, one entry per metric, using this exact wording for each "metric" field: ${selectedKpiMetrics.map(m=>`"${m}"`).join(', ')}. Do not add, drop, or substitute any of them.`
+      : `Pick 3-5 metrics that fit this client and the initiatives above — examples include conversion rate improvement, cart conversion rate, revenue improvement, indexation improvement, GSC impressions and clicks, organic traffic growth, keyword count in top 10, local map pack improvement — but use whatever actually fits the data and goals, not a fixed list.`;
+
+    const overviewPrompt = `You are an experienced SEO strategist writing the opening section of a client-facing quarterly report for ${clientName}. Using the data below, write ONLY the overview section.
+
+${baseContext}
+${shotAsk}
+
+Respond with ONLY valid JSON, no markdown fences, no preamble, matching exactly this shape:
+{
+  "summary": "2-3 sentence overall narrative for this ${months}-month plan",
+  "gsc_narrative": "3-4 sentence client-facing paragraph narrating the GSC performance trend — clicks, impressions, CTR, and position${comparisonType ? `, compared against ${comparisonType}` : ''} — referencing the baseline numbers and any decline/improvement signals above.",
+  "ga_narrative": "3-4 sentence client-facing paragraph narrating the GA/traffic trend — sessions and conversions${comparisonType ? `, compared against ${comparisonType}` : ''} — referencing baseline numbers and any page-level drops/gains above.",
+  "benchmark_kpis": [{"metric": "e.g. Organic traffic growth", "target": "e.g. +12-15% over the quarter", "notes": ["optional short sub-bullet with extra context — omit entirely or leave empty if the target speaks for itself"]}]
+}
+
+For "benchmark_kpis": ${metricSelectionAsk} Format "target" the way a client-facing goals sheet would state it — a dollar figure (e.g. "$200k in summer months; $220k in winter months"), a percent range (e.g. "8-12% growth"), an absolute value (e.g. "Increase to $125"), or a count — whichever fits that metric, over the ${months}-month period. Keep "metric" short, like a bolded label.
+
+CRITICAL calibration rule for KPI targets — read "Where this campaign stands right now" and "Client's stated goal" above before picking numbers:
+- The target must be attainable given where the account stands, not just what the client wants. An early-stage or flat-performing campaign should get conservative, modest targets — do not propose a large jump (e.g. 50% traffic growth) for an account 1-3 months in with no meaningful growth yet.
+- A mature campaign already showing real gains can support a more ambitious target, proportional to the growth trend already visible in the baseline/data above — e.g. an account 12 months in already up ~20% might reasonably target 25-30% over the next quarter, not double overnight.
+- Ground every target in the actual baseline numbers and insights above, not a generic industry benchmark.
+- Use "notes" sparingly — only add a sub-bullet when there's a real nuance worth flagging. Most metrics need zero notes.`;
+
+    const imageBlocks = [];
+    if(state.gsc.screenshot) imageBlocks.push({type:'image', source:{type:'base64', media_type: state.gsc.screenshot.mediaType, data: state.gsc.screenshot.base64}});
+    if(state.ga.screenshot) imageBlocks.push({type:'image', source:{type:'base64', media_type: state.ga.screenshot.mediaType, data: state.ga.screenshot.base64}});
+
+    document.getElementById('gen-label').textContent = 'Writing performance overview…';
+    const overviewParsed = await callGenerateAPI(overviewPrompt, imageBlocks, 1000);
+    summaryText = overviewParsed.summary || '';
+    gscNarrative = overviewParsed.gsc_narrative || '';
+    gaNarrative = overviewParsed.ga_narrative || '';
+    benchmarkKpis = Array.isArray(overviewParsed.benchmark_kpis) ? overviewParsed.benchmark_kpis : [];
+
+    // --- Call(s) 2+: months only, no images, no narrative overhead — smaller, focused, faster. ---
+    const batches = months===6 ? [[1,3],[4,6]] : [[1,3]];
+    for(const [start,end] of batches){
+      const count = end-start+1;
+      document.getElementById('gen-label').textContent = `Planning months ${start}-${end}…`;
+      const monthsPrompt = `You are an experienced SEO strategist writing month-by-month initiatives for months ${start}-${end} of a ${months}-month plan for ${clientName}.
+
+${baseContext}
+
+Respond with ONLY valid JSON, no markdown fences, no preamble, matching exactly this shape:
+{
+  "months": [
+    {"month": ${start}, "theme": "short theme name for this month, e.g. 'Schema updates'", "summary": "1 sentence summary of this month's focus, written like a report subhead", "actions": [{"title":"short action title","description":"1 sentence description","category":"technical|content|links|ux|measurement","target_keywords_pages":["the exact keyword or page text copied verbatim from the data above, e.g. \\"best running shoes for flat feet\\" or \\"/product/trail-shoes\\" — real strings only, never a generic label"]}], "expected_outcome": "1 sentence expected result, quantified against the baseline metrics where possible"}
+  ],
+  "quick_wins": ["short quick win 1", "short quick win 2"],
+  "risks": ["short risk or dependency 1"]
+}
+Include exactly ${count} objects in "months", covering months ${start} through ${end} in order. Give each month 3 actions maximum. At least two of the three actions per month must name real keywords or pages from the data above in "target_keywords_pages" rather than generic best practice.
+
+CRITICAL rule for "target_keywords_pages": every entry must be an exact string copied from the data above (a real query or a real URL/page path) — quote it exactly as it appears. NEVER write a generic placeholder like "query cluster", "keyword group", "location cluster", or any other category label standing in for real data — if an action covers many similar queries, pick 2-3 actual representative ones and list them verbatim instead of describing the group. If you genuinely cannot name a real keyword or page for an action, omit the field entirely rather than inventing a label. Keep every string short and concrete.`;
+
+      const parsed = await callGenerateAPI(monthsPrompt, [], 2200);
+      allMonths = allMonths.concat(sanitizeMonths(parsed.months || []));
+      quickWins = quickWins.concat(parsed.quick_wins || []);
+      risks = risks.concat(parsed.risks || []);
+    }
+
+    const labeledMonths = attachCalendarLabels(allMonths, startMonthVal);
+    const kpReference = buildKeywordPageReference();
+
+    lastResult = {
+      summary: summaryText, months: labeledMonths,
+      quick_wins: [...new Set(quickWins)], risks: [...new Set(risks)],
+      gscInsights, gaInsights, baseline, benchmarkKpis,
+      gscNarrative, gaNarrative, clientName, clientUrl, kpReference,
+      gscScreenshot: state.gsc.screenshot ? state.gsc.screenshot.dataUrl : null,
+      gaScreenshot: state.ga.screenshot ? state.ga.screenshot.dataUrl : null
+    };
+    renderOutput(lastResult);
+    statusEl.textContent = '';
+  }catch(err){
+    statusEl.textContent = 'Something went wrong generating the strategy: ' + err.message;
+    statusEl.classList.add('err');
+  }finally{
+    btn.disabled=false; btn.classList.remove('loading');
+    document.getElementById('gen-label').textContent = 'Generate strategy';
+  }
+});
+
+function catClass(cat){
+  const map = {technical:'cat-technical', content:'cat-content', links:'cat-links', ux:'cat-ux', measurement:'cat-measurement'};
+  return map[cat] || 'cat-measurement';
+}
+
+function buildSparkline(n){
+  const w=880,h=70,marginX=20;
+  const pts = [];
+  for(let i=0;i<n;i++){
+    const x = marginX + i*((w-2*marginX)/(n-1||1));
+    const y = h-14 - i*((h-28)/(n-1||1)) - (i%2===0?2:6);
+    pts.push([x,y]);
+  }
+  const path = pts.map((p,i)=> (i===0?'M':'L')+p[0]+','+p[1]).join(' ');
+  const circles = pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="#1F6F52"/>`).join('');
+  return `<svg class="sparkline" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+    <path d="${path}" fill="none" stroke="#1F6F52" stroke-width="2" stroke-linecap="round"/>
+    ${circles}
+  </svg>`;
+}
+
+function renderKeywordPageReference(kp){
+  if(!kp || (!kp.keywords.length && !kp.pages.length)) return '';
+  let html = `<div class="insights-card"><h2>Keywords &amp; Pages</h2><p class="hint">Top rows from your uploaded data, for reference alongside the roadmap.</p><div class="kp-grid">`;
+  if(kp.keywords.length){
+    html += `<table class="kp-table"><tr><th>Query</th><th>Clicks</th><th>Pos.</th></tr>
+      ${kp.keywords.map(k=>`<tr><td>${escapeHtml(k.name)}</td><td>${k.clicks}</td><td>${isNaN(k.position)?'—':k.position.toFixed(1)}</td></tr>`).join('')}
+    </table>`;
+  }
+  if(kp.pages.length){
+    html += `<table class="kp-table"><tr><th>Page</th><th>Sessions</th></tr>
+      ${kp.pages.map(p=>`<tr><td>${escapeHtml(p.name)}</td><td>${p.sessions}</td></tr>`).join('')}
+    </table>`;
+  }
+  html += `</div></div>`;
+  return html;
+}
+
+function renderBenchmarkKpis(kpis){
+  if(!kpis || !kpis.length) return '';
+  return `<div class="kpi-card">
+    <h2>Goals / KPIs</h2>
+    <ul class="kpi-list">
+      ${kpis.map(k=>`<li>
+        <span class="kpi-line"><b>${escapeHtml(k.metric||'')}</b> | ${escapeHtml(k.target||'')}</span>
+        ${(k.notes&&k.notes.length) ? `<ul class="kpi-notes">${k.notes.map(n=>`<li>${escapeHtml(n)}</li>`).join('')}</ul>` : ''}
+      </li>`).join('')}
+    </ul>
+  </div>`;
+}
+
+function renderInsightsCard(gscInsights, gaInsights){
+  gscInsights = gscInsights || {declining:[],improving:[],striking:[],lowCtr:[]};
+  gaInsights = gaInsights || {decliningPages:[],lowConvertingPages:[]};
+  const groups = [
+    {key:'declining', cls:'declining', title:'Declining queries', items:gscInsights.declining},
+    {key:'decliningPages', cls:'declining', title:'Pages losing traffic', items:gaInsights.decliningPages},
+    {key:'improving', cls:'improving', title:'Improving queries', items:gscInsights.improving},
+    {key:'striking', cls:'striking', title:'Striking distance (pos. 11–20)', items:gscInsights.striking},
+    {key:'lowCtr', cls:'lowctr', title:'Low-CTR opportunities', items:gscInsights.lowCtr},
+    {key:'lowConvertingPages', cls:'lowctr', title:'High traffic, zero conversions', items:gaInsights.lowConvertingPages},
+  ].filter(g=>g.items && g.items.length);
+
+  if(!groups.length) return '';
+
+  return `<div class="insights-card">
+    <h2>Data signals</h2>
+    <p class="hint">Pulled directly from your CSV rows, not model-generated.</p>
+    ${groups.map(g=>`
+      <div class="insight-group ${g.cls}">
+        <h4><span class="swatch"></span>${g.title}</h4>
+        <ul>${g.items.map(i=>`<li>${i}</li>`).join('')}</ul>
+      </div>`).join('')}
+  </div>`;
+}
+
+function renderStatStrip(baseline){
+  if(!baseline) return '';
+  const stats = [];
+  if(baseline.clicks!==undefined){
+    stats.push(['Clicks', baseline.clicks.toLocaleString()]);
+    stats.push(['Impressions', baseline.impressions.toLocaleString()]);
+    if(baseline.avgPosition!=null) stats.push(['Avg. position', baseline.avgPosition.toFixed(1)]);
+    if(baseline.ctr!=null) stats.push(['CTR', baseline.ctr.toFixed(2)+'%']);
+  }
+  if(baseline.sessions!==undefined){
+    stats.push(['Sessions', baseline.sessions.toLocaleString()]);
+    if(baseline.conversionRate!=null) stats.push(['Conv. rate', baseline.conversionRate.toFixed(2)+'%']);
+  }
+  if(!stats.length) return '';
+  const cap = (baseline.queryCount>=1000) ? `<p class="hint" style="margin:6px 0 18px;">These GSC totals reflect ${baseline.queryCount.toLocaleString()} exported rows — likely capped at GSC's 1,000-row UI export limit, so treat them as a floor rather than the exact site-wide total.</p>` : '';
+  return `<div class="stat-strip">${stats.map(([lbl,num])=>`<div class="stat"><span class="num">${num}</span><span class="lbl">${lbl}</span></div>`).join('')}</div>${cap}`;
+}
+
+function renderOutput(result){
+  const out = document.getElementById('output');
+  const months = (result.months||[]).sort((a,b)=>a.month-b.month);
+
+  let html = '';
+  if(result.clientName){
+    html += `<div class="report-title">${result.clientName}${result.clientUrl ? ` — <a href="${result.clientUrl}" target="_blank">${result.clientUrl}</a>` : ''}</div>`;
+  }
+  html += renderBenchmarkKpis(result.benchmarkKpis);
+  html += renderKeywordPageReference(result.kpReference);
+  html += renderInsightsCard(result.gscInsights, result.gaInsights);
+  html += renderStatStrip(result.baseline);
+  html += buildSparkline(months.length);
+  if(result.summary) html += `<div class="out-summary">${result.summary}</div>`;
+
+  if(result.gscNarrative || result.gaNarrative || result.gscScreenshot || result.gaScreenshot){
+    html += `<div class="narrative-block">`;
+    if(result.gscNarrative) html += `<h3>GSC Performance</h3><p>${result.gscNarrative}</p>`;
+    if(result.gscScreenshot) html += `<img src="${result.gscScreenshot}" style="max-width:100%;border-radius:8px;margin-top:10px;border:1px solid var(--line);">`;
+    if(result.gaNarrative) html += `<h3>GA Performance</h3><p>${result.gaNarrative}</p>`;
+    if(result.gaScreenshot) html += `<img src="${result.gaScreenshot}" style="max-width:100%;border-radius:8px;margin-top:10px;border:1px solid var(--line);">`;
+    html += `</div>`;
+  }
+
+  // group months by quarter, preserving order
+  const quarters = [];
+  months.forEach(m=>{
+    const q = m.quarter_label || 'Plan';
+    let g = quarters.find(g=>g.label===q);
+    if(!g){ g = {label:q, months:[]}; quarters.push(g); }
+    g.months.push(m);
+  });
+
+  quarters.forEach(q=>{
+    html += `<div class="quarter-heading">${q.label}</div>`;
+    html += '<div class="timeline">';
+    q.months.forEach(m=>{
+      html += `<div class="month-block">
+        <div class="month-node">M${m.month}</div>
+        <div class="month-card">
+          <div class="m-label">${m.month_label || ('Month '+m.month)}</div>
+          <h3>${m.theme || ''}</h3>
+          ${m.summary ? `<p class="m-summary">${m.summary}</p>` : ''}
+          <ul class="action-list">
+            ${(m.actions||[]).map(a=>`
+              <li>
+                <span class="cat-tag ${catClass(a.category)}">${a.category||'general'}</span>
+                <span class="action-text"><b>${a.title||''}</b><span>${a.description||''}</span>${(a.target_keywords_pages&&a.target_keywords_pages.length) ? a.target_keywords_pages.map(k=>`<span class="based-on">${k}</span>`).join('') : ''}</span></li>`).join('')}
+          </ul>
+          ${m.expected_outcome ? `<div class="outcome">Expected outcome: ${m.expected_outcome}</div>` : ''}
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+
+  if(result.quick_wins && result.quick_wins.length){
+    html += `<div class="callout wins"><h3>Quick wins</h3><ul>${result.quick_wins.map(q=>`<li>${q}</li>`).join('')}</ul></div>`;
+  }
+  if(result.risks && result.risks.length){
+    html += `<div class="callout risks"><h3>Risks & dependencies</h3><ul>${result.risks.map(r=>`<li>${r}</li>`).join('')}</ul></div>`;
+  }
+
+  html += `<div class="out-actions">
+    <button id="download-doc">Download as Word (.doc)</button>
+    <button id="download-xlsx">Download as Excel (.xlsx)</button>
+    <button id="download-md">Download as Markdown</button>
+    <button id="regen-btn">Regenerate</button>
+  </div>`;
+
+  out.innerHTML = html;
+  out.style.display = 'block';
+
+  document.getElementById('download-doc').addEventListener('click', ()=>downloadDoc(result));
+  document.getElementById('download-xlsx').addEventListener('click', ()=>downloadXlsx(result));
+  document.getElementById('download-md').addEventListener('click', ()=>downloadMarkdown(result));
+  document.getElementById('regen-btn').addEventListener('click', ()=>document.getElementById('gen-btn').click());
+  out.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+// Robust download: tries the standard blob+anchor click, and falls back to
+// opening the file in a new tab (some embedded/preview browser contexts
+// block programmatic downloads, but opening a blob URL still works —
+// the user can then use the browser's own Save/Download action).
+function triggerDownload(blob, filename){
+  const url = URL.createObjectURL(blob);
+  try{
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>{
+      // If the tab never navigated/downloaded (common in sandboxed previews),
+      // open it directly so the user has something to save.
+      window.open(url, '_blank');
+    }, 150);
+  }catch(e){
+    window.open(url, '_blank');
+  }
+  setTimeout(()=>URL.revokeObjectURL(url), 60000);
+}
+
+function insightSections(result){
+  const gsc = result.gscInsights || {declining:[],improving:[],striking:[],lowCtr:[]};
+  const ga = result.gaInsights || {decliningPages:[],lowConvertingPages:[]};
+  return [
+    ['Declining queries', gsc.declining], ['Pages losing traffic', ga.decliningPages],
+    ['Improving queries', gsc.improving], ['Striking distance (pos. 11-20)', gsc.striking],
+    ['Low-CTR opportunities', gsc.lowCtr], ['High traffic, zero conversions', ga.lowConvertingPages]
+  ].filter(([,items])=>items && items.length);
+}
+
+function downloadDoc(result){
+  const months = (result.months||[]).sort((a,b)=>a.month-b.month);
+  const quarterLabels = [...new Set(months.map(m=>m.quarter_label).filter(Boolean))];
+  const rangeLabel = quarterLabels.length ? quarterLabels.join(' + ') : `${state.timeframe}-Month Plan`;
+  const clientName = result.clientName || 'SEO Strategy';
+
+  let body = `<p style="font-size:16pt;font-weight:bold;">${escapeHtml(rangeLabel)} - ${escapeHtml(clientName)}</p>`;
+  if(result.clientUrl){
+    body += `<p><a href="${escapeHtml(result.clientUrl)}"><u>${escapeHtml(result.clientUrl)}</u></a></p>`;
+  }
+
+  if(result.benchmarkKpis && result.benchmarkKpis.length){
+    body += `<div style="border:1.5px solid #1F6F52;border-radius:6px;padding:14px 18px;margin:14px 0;">
+      <p style="font-weight:bold;font-size:14pt;margin-top:0;">Goals / KPIs</p><ul>`;
+    result.benchmarkKpis.forEach(k=>{
+      body += `<li><b>${escapeHtml(k.metric||'')}</b> | ${escapeHtml(k.target||'')}`;
+      if(k.notes && k.notes.length){
+        body += `<ul>${k.notes.map(n=>`<li>${escapeHtml(n)}</li>`).join('')}</ul>`;
+      }
+      body += `</li>`;
+    });
+    body += `</ul></div>`;
+  }
+
+  if(result.gscNarrative){
+    body += `<p style="font-weight:bold;font-size:13pt;">GSC Performance</p><p>${escapeHtml(result.gscNarrative)}</p>`;
+  }
+  if(result.gscScreenshot){
+    body += `<p><img src="${result.gscScreenshot}" width="600"></p>`;
+  }
+  if(result.gaNarrative){
+    body += `<p style="font-weight:bold;font-size:13pt;">GA Performance</p><p>${escapeHtml(result.gaNarrative)}</p>`;
+  }
+  if(result.gaScreenshot){
+    body += `<p><img src="${result.gaScreenshot}" width="600"></p>`;
+  }
+
+  const kp = result.kpReference;
+  if(kp && (kp.keywords.length || kp.pages.length)){
+    body += `<p style="font-weight:bold;font-size:13pt;">Keywords &amp; Pages</p>`;
+    if(kp.keywords.length){
+      body += `<p><b>Top queries</b></p><table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse;">
+        <tr style="background:#EEEEEE;"><th>Query</th><th>Clicks</th><th>Position</th></tr>
+        ${kp.keywords.map(k=>`<tr><td>${escapeHtml(k.name)}</td><td>${k.clicks}</td><td>${isNaN(k.position)?'—':k.position.toFixed(1)}</td></tr>`).join('')}
+      </table>`;
+    }
+    if(kp.pages.length){
+      body += `<p><b>Top pages</b></p><table border="1" cellspacing="0" cellpadding="4" style="border-collapse:collapse;">
+        <tr style="background:#EEEEEE;"><th>Page</th><th>Sessions</th></tr>
+        ${kp.pages.map(p=>`<tr><td>${escapeHtml(p.name)}</td><td>${p.sessions}</td></tr>`).join('')}
+      </table>`;
+    }
+  }
+
+  const notes = [...(result.quick_wins||[]), ...(result.risks||[])];
+  if(notes.length){
+    body += `<p style="font-weight:bold;">Few notes to consider:</p><ul>${notes.map(n=>`<li>${escapeHtml(n)}</li>`).join('')}</ul>`;
+  }
+
+  // group by quarter in order
+  const quarters = [];
+  months.forEach(m=>{
+    const q = m.quarter_label || rangeLabel;
+    let g = quarters.find(g=>g.label===q);
+    if(!g){ g = {label:q, months:[]}; quarters.push(g); }
+    g.months.push(m);
+  });
+
+  quarters.forEach(q=>{
+    body += `<p style="font-weight:bold;font-size:14pt;background:#F0F0F0;padding:4px;">${escapeHtml(q.label)}</p>`;
+    q.months.forEach(m=>{
+      body += `<p style="font-weight:bold;font-size:12pt;">${escapeHtml(m.month_label || ('Month '+m.month))} — ${escapeHtml(m.theme||'')}</p>`;
+      if(m.summary) body += `<p><b>Summary:</b> ${escapeHtml(m.summary)}</p>`;
+      body += `<ul>`;
+      (m.actions||[]).forEach(a=>{
+        body += `<li><b>${escapeHtml(a.title||'')}</b> — ${escapeHtml(a.description||'')}`;
+        if(a.target_keywords_pages && a.target_keywords_pages.length){
+          body += `<ul>${a.target_keywords_pages.map(k=>`<li>${escapeHtml(k)}</li>`).join('')}</ul>`;
+        }
+        body += `</li>`;
+      });
+      body += `</ul>`;
+      if(m.expected_outcome) body += `<p><i>Expected outcome: ${escapeHtml(m.expected_outcome)}</i></p>`;
+    });
+  });
+
+  const doc = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+  <head><meta charset="utf-8"><title>${escapeHtml(clientName)} SEO Strategy</title></head>
+  <body style="font-family:Calibri,Arial,sans-serif;font-size:11pt;">${body}</body></html>`;
+  const blob = new Blob(['\ufeff', doc], {type:'application/msword'});
+  triggerDownload(blob, `seo-strategy-${(clientName||'report').toLowerCase().replace(/[^a-z0-9]+/g,'-')}.doc`);
+}
+
+function downloadXlsx(result){
+  const wb = XLSX.utils.book_new();
+  const clientName = result.clientName || 'SEO Strategy';
+
+  // Overview sheet
+  const overviewRows = [[`${clientName} — SEO Strategy Overview`], [`Timeframe: ${state.timeframe} months`], []];
+  if(result.benchmarkKpis && result.benchmarkKpis.length){
+    overviewRows.push(['Goals / KPIs']);
+    overviewRows.push(['Metric', 'Target', 'Notes']);
+    result.benchmarkKpis.forEach(k=>overviewRows.push([k.metric||'', k.target||'', (k.notes||[]).join(' | ')]));
+    overviewRows.push([]);
+  }
+  if(result.gscNarrative) overviewRows.push(['GSC Performance', result.gscNarrative], []);
+  if(result.gaNarrative) overviewRows.push(['GA Performance', result.gaNarrative], []);
+  if(result.summary) overviewRows.push(['Summary', result.summary], []);
+  if(result.quick_wins && result.quick_wins.length){
+    overviewRows.push(['Quick Wins']);
+    result.quick_wins.forEach(q=>overviewRows.push(['', q]));
+    overviewRows.push([]);
+  }
+  if(result.risks && result.risks.length){
+    overviewRows.push(['Risks & Dependencies']);
+    result.risks.forEach(r=>overviewRows.push(['', r]));
+  }
+  const wsOverview = XLSX.utils.aoa_to_sheet(overviewRows);
+  wsOverview['!cols'] = [{wch:20},{wch:90}];
+  XLSX.utils.book_append_sheet(wb, wsOverview, 'Overview');
+
+  // Monthly action plan sheet
+  const planRows = [['Quarter','Month','Theme','Category','Action','Description','Target Keywords/Pages','Expected Outcome']];
+  (result.months||[]).sort((a,b)=>a.month-b.month).forEach(m=>{
+    (m.actions||[]).forEach((a,i)=>{
+      planRows.push([i===0?(m.quarter_label||''):'', i===0?(m.month_label||('Month '+m.month)):'', i===0?(m.theme||''):'', a.category||'', a.title||'', a.description||'', (a.target_keywords_pages||[]).join('; '), i===0?(m.expected_outcome||''):'']);
+    });
+  });
+  const wsPlan = XLSX.utils.aoa_to_sheet(planRows);
+  wsPlan['!cols'] = [{wch:12},{wch:16},{wch:22},{wch:14},{wch:28},{wch:50},{wch:40},{wch:40}];
+  XLSX.utils.book_append_sheet(wb, wsPlan, 'Monthly Plan');
+
+  // Data signals sheet
+  const sigGroups = insightSections(result);
+  if(sigGroups.length){
+    const sigRows = [['Signal Type','Detail']];
+    sigGroups.forEach(([title,items])=>items.forEach(i=>sigRows.push([title, i])));
+    const wsSig = XLSX.utils.aoa_to_sheet(sigRows);
+    wsSig['!cols'] = [{wch:26},{wch:80}];
+    XLSX.utils.book_append_sheet(wb, wsSig, 'Data Signals');
+  }
+
+  const wbout = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+  const blob = new Blob([wbout], {type:'application/octet-stream'});
+  triggerDownload(blob, `seo-strategy-${clientName.toLowerCase().replace(/[^a-z0-9]+/g,'-')}.xlsx`);
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function downloadMarkdown(result){
+  const clientName = result.clientName || 'SEO Strategy';
+  let md = `# ${clientName} — SEO Strategy (${state.timeframe} months)\n\n`;
+  if(result.clientUrl) md += `${result.clientUrl}\n\n`;
+  if(result.benchmarkKpis && result.benchmarkKpis.length){
+    md += `## Goals / KPIs\n\n`;
+    result.benchmarkKpis.forEach(k=>{
+      md += `- **${k.metric}** | ${k.target}\n`;
+      (k.notes||[]).forEach(n=>{ md += `  - ${n}\n`; });
+    });
+    md += `\n`;
+  }
+  const sigGroups = insightSections(result);
+  if(result.gscNarrative) md += `## GSC Performance\n\n${result.gscNarrative}\n\n`;
+  if(result.gaNarrative) md += `## GA Performance\n\n${result.gaNarrative}\n\n`;
+  if(sigGroups.length){
+    md += `## Data signals\n\n`;
+    sigGroups.forEach(([title,items])=>{ md += `**${title}**\n${items.map(i=>`- ${i}`).join('\n')}\n\n`; });
+  }
+  if(result.summary) md += `${result.summary}\n\n`;
+
+  const months = (result.months||[]).sort((a,b)=>a.month-b.month);
+  let curQuarter = null;
+  months.forEach(m=>{
+    if(m.quarter_label && m.quarter_label !== curQuarter){
+      curQuarter = m.quarter_label;
+      md += `## ${curQuarter}\n\n`;
+    }
+    md += `### ${m.month_label || ('Month '+m.month)} — ${m.theme||''}\n\n`;
+    if(m.summary) md += `_${m.summary}_\n\n`;
+    (m.actions||[]).forEach(a=>{ const kp=(a.target_keywords_pages||[]).join(', '); md += `- **${a.title}** _(${a.category})_ — ${a.description}${kp ? ` (targets: ${kp})` : ''}\n`; });
+    if(m.expected_outcome) md += `\n_Expected outcome: ${m.expected_outcome}_\n`;
+    md += `\n`;
+  });
+  if(result.quick_wins && result.quick_wins.length){
+    md += `## Quick wins\n\n${result.quick_wins.map(q=>`- ${q}`).join('\n')}\n\n`;
+  }
+  if(result.risks && result.risks.length){
+    md += `## Risks & dependencies\n\n${result.risks.map(r=>`- ${r}`).join('\n')}\n`;
+  }
+  const blob = new Blob([md], {type:'text/markdown'});
+  triggerDownload(blob, `seo-strategy-${clientName.toLowerCase().replace(/[^a-z0-9]+/g,'-')}.md`);
+}
+</script>
+</body>
+</html>
